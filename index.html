@@ -223,7 +223,7 @@
                 for (let j = 0; j < cols; j++) {
                     let cell = document.createElement('td');
                     cell.textContent = grid[i][j];
-                    if (grid[i][j] != "") {
+                    if (grid[i][j] != "" && grid[i][j] != " ") {
                         cell.classList.add("highlight")
                     }
 
@@ -261,7 +261,7 @@
             for (let i = 0; i < rows.length; i++) {
                 let cells = rows[i].getElementsByTagName('td');
                 for (let j = 0; j < cells.length; j++) {
-                    if (cells[j].textContent === '') {
+                    if (cells[j].textContent === '' || cells[j].textContent === ' ') {
                         cells[j].textContent = getRandomLetter();
                     }
                 }
