@@ -49,7 +49,8 @@
         </select>
         <br>
         <label for="words">Wörter eingeben (durch Komma getrennt):</label><br>
-        <textarea rows="5" cols="50" id="words">blaue, graue, gelbe, tonne, feiertag, wochenende, montag, dienstag, mittwoch, donnerstag, freitag, samstag, sonntag, zeit zum, zocken, aufräumen, spülen, arbeiten, malen, youtube, live, urlaub, essen, pause</textarea>
+        <textarea rows="5" cols="50" id="words">blaue, graue, gelbe, tonne, feiertag, wochenende, montag, dienstag, mittwoch, donnerstag, freitag, samstag, sonntag,
+            zeit zum, zocken, aufräumen, spülen, arbeiten, malen, youtube, live, urlaub, essen, pause</textarea>
         <br>
         <button onclick="insertWords()">Raster generieren</button>
         <button onclick="fillEmptyCells()">Leere Zellen füllen</button>
@@ -62,6 +63,12 @@
             <!-- Mit JavaScript wird die Tabelle dynamisch gefüllt -->
         </tbody>
     </table>
+
+    <div id="stats">
+        <h2>Statistiken:</h2>
+        <p id="wordStats"></p>
+        <p id="emptyCellStats"></p>
+    </div>
 
     <div class="word-list">
         <h2>Erfolgreich hinzugefügte Wörter:</h2>
@@ -138,6 +145,24 @@
                 }
             });
 
+            // Wort-Statistiken aktualisieren
+            let totalWords = wordsArray.length;
+            let usedWords = successWords.length;
+            document.getElementById("wordStats").textContent = `Verwendete Wörter: ${usedWords} von ${totalWords}`;
+
+            // Leere Zellen-Statistiken aktualisieren
+            let emptyCells = 0;
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    if (grid[i][j] === '') {
+                        emptyCells++;
+                    }
+                }
+            }
+            let totalCells = rows * cols;
+            let emptyCellPercentage = ((emptyCells / totalCells) * 100).toFixed(2);
+            document.getElementById("emptyCellStats").textContent = `Leere Zellen: ${emptyCells} von ${totalCells} (${emptyCellPercentage}%)`;
+
             // Erfolgreich hinzugefügte Wörter in Liste einfügen
             let successList = document.getElementById("successWords");
             successList.innerHTML = '';
@@ -170,14 +195,16 @@
                 for (let j = 0; j < cols; j++) {
                     let cell = document.createElement('td');
                     cell.textContent = grid[i][j];
-                    if (grid[i][j] !== '') {
-                        cell.classList.add("highlight");
+                    if (grid[i][j] != "") {
+                        cell.classList.add("highlight")
                     }
+
                     row.appendChild(cell);
                 }
                 tableBody.appendChild(row);
             }
         }
+
 
         function canPlaceWord(grid, word, x, y, direction) {
             let cols = grid[0].length;
