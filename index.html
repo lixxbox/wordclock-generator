@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Wort-Raster</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            /* width: 320px;
+            height: 320px; */
+        }
+
+        td {
+            border: 1px solid black;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+        }
+
+        .word-list {
+            margin-top: 20px;
+        }
+
+        .word-item {
+            margin-bottom: 5px;
+        }
+
+        .highlight {
+            color: red;
+        }
+
+        #coordinates {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Wort-Raster</h1>
+    <p>
+        <label for="gridSize">Rastergröße wählen:</label>
+        <select id="gridSize">
+            <option value="8x8">8x8</option>
+            <option value="8x16">8x16</option>
+            <option value="16x8">16x8</option>
+            <option value="16x16" selected>16x16</option>
+        </select>
+        <br>
+        <label for="words">Wörter eingeben (durch Komma getrennt):</label><br>
+        <textarea rows="5" cols="50" id="words">blaue, graue, gelbe, tonne, feiertag, wochenende, montag, dienstag, mittwoch, donnerstag, freitag, samstag, sonntag,
+            zeit zum, zocken, aufräumen, spülen, arbeiten, malen, youtube, live, urlaub, essen, pause</textarea>
+        <br>
+        <button onclick="insertWords()">Raster generieren</button>
+        <button onclick="fillEmptyCells()">Leere Zellen füllen</button>
+
+    </p>
+
+    <table id="grid">
+        <!-- Dynamische Größe des Rasters -->
+        <tbody>
+            <!-- Mit JavaScript wird die Tabelle dynamisch gefüllt -->
+        </tbody>
+    </table>
+
+    <div class="word-list">
+        <h2>Erfolgreich hinzugefügte Wörter:</h2>
+        <div id="successWords"></div>
+    </div>
+
+    <div class="word-list">
+        <h2>Nicht hinzugefügte Wörter:</h2>
+        <div id="failedWords"></div>
+    </div>
+
+    <div id="coordinates">
+        <h2>Koordinaten der Wörter:</h2>
+        <pre id="coordinatesJson"></pre>
+    </div>
+
+    <script>
+        let gridSize = "16x16";
+
+        function insertWords() {
+            let wordsInput = document.getElementById("words").value;
+            let wordsArray = wordsInput.split(",").map(word => word.trim().toUpperCase());
+
+            gridSize = document.getElementById("gridSize").value;
+            let [cols, rows] = gridSize.split('x').map(Number);
+
+            let grid = Array.from({ length: rows }, () => Array.from({ length: cols }, () => ''));
+
+            let successWords = [];
+            let failedWords = [];
+            let wordCoordinates = [];
+
+            wordsArray.forEach(word => {
+                let direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                let x, y;
+
+                let wordFits = false;
+                let tries = 0;
+
+                while (!wordFits && tries < 100) {
+                    tries++;
+
+                    if (direction === 'horizontal') {
+                        x = Math.floor(Math.random() * (cols - word.length + 1));
+                        y = Math.floor(Math.random() * rows);
+                    } else {
+                        x = Math.floor(Math.random() * cols);
+                        y = Math.floor(Math.random() * (rows - word.length + 1));
+                    }
+
+                    if (canPlaceWord(grid, word, x, y, direction)) {
+                        wordFits = true;
+                        successWords.push(word);
+
+                        for (let i = 0; i < word.length; i++) {
+                            if (direction === 'horizontal') {
+                                grid[y][x + i] = word[i];
+                            } else {
+                                grid[y + i][x] = word[i];
+                            }
+                        }
+
+                        wordCoordinates.push({
+                            word: word,
+                            direction: direction,
+                            x: x,
+                            y: y
+                        });
+                    }
+                }
+
+                if (!wordFits) {
+                    failedWords.push(`${word} (Kein Platz gefunden)`);
+                }
+            });
+
+            // Erfolgreich hinzugefügte Wörter in Liste einfügen
+            let successList = document.getElementById("successWords");
+            successList.innerHTML = '';
+            successWords.forEach(word => {
+                let wordItem = document.createElement('div');
+                wordItem.textContent = word;
+                wordItem.classList.add('word-item');
+                successList.appendChild(wordItem);
+            });
+
+            // Nicht hinzugefügte Wörter in Liste einfügen
+            let failedList = document.getElementById("failedWords");
+            failedList.innerHTML = '';
+            failedWords.forEach(word => {
+                let wordItem = document.createElement('div');
+                wordItem.textContent = word;
+                wordItem.classList.add('word-item');
+                failedList.appendChild(wordItem);
+            });
+
+            // Koordinaten der Wörter ausgeben
+            let coordinatesJson = document.getElementById("coordinatesJson");
+            coordinatesJson.textContent = JSON.stringify(wordCoordinates, null, 2);
+
+            // Tabelle neu erstellen
+            let tableBody = document.getElementById("grid").getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            for (let i = 0; i < rows; i++) {
+                let row = document.createElement('tr');
+                for (let j = 0; j < cols; j++) {
+                    let cell = document.createElement('td');
+                    cell.textContent = grid[i][j];
+                    if (grid[i][j] !== '') {
+                        cell.classList.add("highlight");
+                    }
+                    row.appendChild(cell);
+                }
+                tableBody.appendChild(row);
+            }
+        }
+
+        function canPlaceWord(grid, word, x, y, direction) {
+            let cols = grid[0].length;
+            let rows = grid.length;
+
+            if (direction === 'horizontal') {
+                if (x + word.length > cols) return false;
+                for (let i = 0; i < word.length; i++) {
+                    if (grid[y][x + i] !== '' && grid[y][x + i] !== word[i]) {
+                        return false;
+                    }
+                }
+            } else {
+                if (y + word.length > rows) return false;
+                for (let i = 0; i < word.length; i++) {
+                    if (grid[y + i][x] !== '' && grid[y + i][x] !== word[i]) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function fillEmptyCells() {
+            let table = document.getElementById("grid");
+            let rows = table.getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                let cells = rows[i].getElementsByTagName('td');
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent === '') {
+                        cells[j].textContent = getRandomLetter();
+                    }
+                }
+            }
+        }
+
+        function getRandomLetter() {
+            let alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            return alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        }
+    </script>
+
+</body>
+
+</html>
