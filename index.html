@@ -3,12 +3,19 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Wort-Raster</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordclock Generator</title>
     <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
         table {
             border-collapse: collapse;
-            /* width: 320px;
-            height: 320px; */
+            margin-top: 20px;
+            max-width: 100%;
         }
 
         td {
@@ -16,14 +23,20 @@
             width: 20px;
             height: 20px;
             text-align: center;
+            font-size: 1.2em;
+            background-color: #fff;
         }
 
         .word-list {
             margin-top: 20px;
+            font-size: 1.2em;
         }
 
         .word-item {
             margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #e9e9e9;
         }
 
         .highlight {
@@ -32,6 +45,37 @@
 
         #coordinates {
             margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 1.2em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        label,
+        textarea,
+        select {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #wordStats,
+        #emptyCellStats {
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -47,14 +91,13 @@
             <option value="16x8">16x8</option>
             <option value="16x16" selected>16x16</option>
         </select>
-        <br>
-        <label for="words">Wörter eingeben (durch Komma getrennt):</label><br>
-        <textarea rows="5" cols="50" id="words">blaue, graue, gelbe, tonne, feiertag, wochenende, montag, dienstag, mittwoch, donnerstag, freitag, samstag, sonntag,
-            zeit zum, zocken, aufräumen, spülen, arbeiten, malen, youtube, live, urlaub, essen, pause</textarea>
-        <br>
+        <label for="words">Wörter eingeben (durch Komma getrennt):</label>
+        <textarea rows="5"
+            id="words">blaue, graue, gelbe, tonne, feiertag, wochenende, montag, dienstag, mittwoch, donnerstag, freitag, samstag, sonntag, zeit zum, zocken, aufräumen, spülen, arbeiten, malen, youtube, live, urlaub, essen, pause</textarea>
         <button onclick="insertWords()">Raster generieren</button>
         <button onclick="fillEmptyCells()">Leere Zellen füllen</button>
-
+    <div id="wordStats"></div>
+    <div id="emptyCellStats"></div>
     </p>
 
     <table id="grid">
@@ -63,12 +106,6 @@
             <!-- Mit JavaScript wird die Tabelle dynamisch gefüllt -->
         </tbody>
     </table>
-
-    <div id="stats">
-        <h2>Statistiken:</h2>
-        <p id="wordStats"></p>
-        <p id="emptyCellStats"></p>
-    </div>
 
     <div class="word-list">
         <h2>Erfolgreich hinzugefügte Wörter:</h2>
@@ -145,24 +182,6 @@
                 }
             });
 
-            // Wort-Statistiken aktualisieren
-            let totalWords = wordsArray.length;
-            let usedWords = successWords.length;
-            document.getElementById("wordStats").textContent = `Verwendete Wörter: ${usedWords} von ${totalWords}`;
-
-            // Leere Zellen-Statistiken aktualisieren
-            let emptyCells = 0;
-            for (let i = 0; i < rows; i++) {
-                for (let j = 0; j < cols; j++) {
-                    if (grid[i][j] === '') {
-                        emptyCells++;
-                    }
-                }
-            }
-            let totalCells = rows * cols;
-            let emptyCellPercentage = ((emptyCells / totalCells) * 100).toFixed(2);
-            document.getElementById("emptyCellStats").textContent = `Leere Zellen: ${emptyCells} von ${totalCells} (${emptyCellPercentage}%)`;
-
             // Erfolgreich hinzugefügte Wörter in Liste einfügen
             let successList = document.getElementById("successWords");
             successList.innerHTML = '';
@@ -187,6 +206,15 @@
             let coordinatesJson = document.getElementById("coordinatesJson");
             coordinatesJson.textContent = JSON.stringify(wordCoordinates, null, 2);
 
+            // Wort-Statistiken aktualisieren
+            document.getElementById("wordStats").textContent = `Verwendete Wörter: ${successWords.length}/${wordsArray.length}`;
+
+            // Leere Zellen Statistiken aktualisieren
+            let emptyCellsCount = grid.flat().filter(cell => cell === '').length;
+            let totalCells = cols * rows;
+            let emptyCellsPercentage = ((emptyCellsCount / totalCells) * 100).toFixed(2);
+            document.getElementById("emptyCellStats").textContent = `Leere Felder: ${emptyCellsCount}/${totalCells} (${emptyCellsPercentage}%)`;
+
             // Tabelle neu erstellen
             let tableBody = document.getElementById("grid").getElementsByTagName('tbody')[0];
             tableBody.innerHTML = '';
@@ -204,7 +232,6 @@
                 tableBody.appendChild(row);
             }
         }
-
 
         function canPlaceWord(grid, word, x, y, direction) {
             let cols = grid[0].length;
