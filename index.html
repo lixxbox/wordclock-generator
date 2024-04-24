@@ -27,11 +27,6 @@
             background-color: #fff;
         }
 
-        .word-list {
-            margin-top: 20px;
-            font-size: 1.2em;
-        }
-
         .word-item {
             margin-bottom: 5px;
             padding: 5px;
@@ -43,7 +38,7 @@
             color: red;
         }
 
-        #coordinates {
+        .section {
             margin-top: 20px;
             font-size: 1.2em;
         }
@@ -107,20 +102,29 @@
         </tbody>
     </table>
 
-    <div class="word-list">
+    <div class="section">
         <h2>Erfolgreich hinzugefügte Wörter:</h2>
         <div id="successWords"></div>
     </div>
 
-    <div class="word-list">
+    <div class="section">
         <h2>Nicht hinzugefügte Wörter:</h2>
         <div id="failedWords"></div>
     </div>
 
-    <div id="coordinates">
+    <div class="section">
         <h2>Koordinaten der Wörter:</h2>
         <pre id="coordinatesJson"></pre>
     </div>
+
+    <!-- OpenSCAD Code Anzeige -->
+    <div class="section">
+        <h2>OpenSCAD Code:</h2>
+        <p>Zum Beispiel im <a href="https://makerworld.com/en/makerlab/parametricModelMaker" target="_blank">Parametric
+                Model Maker</a> einfügen.</p>
+        <pre id="openscadcode"></pre>
+    </div>
+
 
     <script>
         let gridSize = "16x16";
@@ -266,6 +270,79 @@
                     }
                 }
             }
+
+            generateOpenScad()
+        }
+
+        function generateOpenScad() {
+            let table = document.getElementById("grid");
+            let rows = table.getElementsByTagName('tr');
+            // Word Grid initialisieren
+            let word_grid = [];
+
+            // Für jede Zeile der Tabelle
+            for (let i = 0; i < rows.length; i++) {
+                let cells = rows[i].getElementsByTagName('td');
+                let rowString = '';
+
+                // Buchstaben aus der Zeile zu einem String zusammenfügen
+                for (let j = 0; j < cells.length; j++) {
+                    rowString += cells[j].textContent;
+                }
+
+                // String zur word_grid Liste hinzufügen
+                word_grid.push(rowString);
+            }
+
+            word_grid.reverse();
+
+            // Konsolenausgabe der word_grid Liste
+            console.log(word_grid);
+            let wordGridString = 'word_grid = [\n    "' + word_grid.join('",\n    "') + '"\n];';
+            document.getElementById("openscadcode").innerText = `
+// in mm
+cell_size = 10;
+// in mm, should be smaller than "cell_size"
+font_height = 5;
+// in mm
+extra_border = 0;
+// in mm
+thickness = 2; // Höhe der Platte
+`
+                + wordGridString +
+                `
+// Calculate led_count_x and led_count_y from word_grid
+led_count_x = len(word_grid[0]);
+led_count_y = len(word_grid);
+
+difference() {
+    // Äußere Platte
+    linear_extrude(thickness)
+    square([led_count_x * cell_size + extra_border*2,
+    led_count_y * cell_size + extra_border*2], center=false);
+
+    for (x = [0:led_count_x-1]) {
+        for (y = [0:led_count_y-1]) {
+            char_x = x % 16;  // Wortraster hat 16 Spalten
+            char_y = y % 16;  // und 16 Zeilen
+
+            char = word_grid[char_y][char_x];  // Extrahiere den Buchstaben aus dem Raster
+
+            translate([
+                x * (cell_size)+cell_size/2+extra_border,
+                y * (cell_size)+cell_size/2+extra_border,
+                0])
+            linear_extrude(thickness)
+            text(char,
+            size=font_height,
+            halign = "center",
+            valign="center",
+            font="Arial");
+        }
+    }
+}
+
+`
         }
 
         function getRandomLetter() {
