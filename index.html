@@ -86,6 +86,13 @@
             <option value="16x8">16x8</option>
             <option value="16x16" selected>16x16</option>
         </select>
+        <label for="gridSize">Ausrichtung:</label>
+        <select id="direction">
+            <option value="random">vertikal und horizontal (Zufall)</option>
+            <option value="horizontal">nur horizontal</option>
+            <option value="vertical">nur vertikal</option>
+        </select>
+
         <label for="words">Wörter eingeben (durch Komma getrennt):</label>
         <textarea rows="5"
             id="words">blaue, graue, gelbe, tonne, feiertag, wochenende, montag, dienstag, mittwoch, donnerstag, freitag, samstag, sonntag, zeit zum, zocken, aufräumen, spülen, arbeiten, malen, youtube, live, urlaub, essen, pause</textarea>
@@ -128,6 +135,8 @@
 
     <script>
         let gridSize = "16x16";
+        let directionSelection;
+        let direction;
 
         function insertWords() {
             let wordsInput = document.getElementById("words").value;
@@ -136,6 +145,8 @@
             gridSize = document.getElementById("gridSize").value;
             let [cols, rows] = gridSize.split('x').map(Number);
 
+            directionSelection = document.getElementById("direction").value;
+
             let grid = Array.from({ length: rows }, () => Array.from({ length: cols }, () => ''));
 
             let successWords = [];
@@ -143,7 +154,14 @@
             let wordCoordinates = [];
 
             wordsArray.forEach(word => {
-                let direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                if (directionSelection === "random") {
+                    direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                } else if (directionSelection === "horizontal") {
+                    direction = 'horizontal';
+                } else {
+                    direction = 'vertikal';
+                }
+
                 let x, y;
 
                 let wordFits = false;
