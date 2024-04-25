@@ -323,9 +323,13 @@ cell_size = 10;
 // in mm, should be smaller than "cell_size"
 font_height = 5;
 // in mm
-extra_border = 0;
+extra_border = 10;
 // in mm
 thickness = 2; // Höhe der Platte
+// in mm
+grid_height = 5;
+// in mm
+grid_width = 1;
 `
                 + wordGridString +
                 `
@@ -333,9 +337,36 @@ thickness = 2; // Höhe der Platte
 led_count_x = len(word_grid[0]);
 led_count_y = len(word_grid);
 
+translate([-led_count_x * cell_size/2,
+           -led_count_y * cell_size/2 - cell_size/2 - grid_width/2,
+        thickness])
+for (y = [0:led_count_y]) {
+
+    translate([
+                0,
+                y * (cell_size)+cell_size/2,
+                0])
+    linear_extrude(grid_height)
+    square([led_count_y * cell_size + grid_width/2,
+    grid_width], center=false);
+}
+translate([-led_count_y * cell_size/2 - cell_size/2 - grid_width/2,
+           -led_count_x * cell_size/2,
+        thickness])
+for (x = [0:led_count_x]) {
+
+    translate([
+                x * (cell_size)+cell_size/2,
+                0,
+                0])
+    linear_extrude(grid_height)
+    square([grid_width, led_count_x * cell_size + grid_width/2], center=false);
+}
+
 translate([led_count_x * cell_size / -2 - extra_border,
             led_count_y * cell_size / -2 - extra_border,
             0])
+
 difference() {
     // Äußere Platte
     linear_extrude(thickness)
