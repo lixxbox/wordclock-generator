@@ -333,6 +333,9 @@ thickness = 2; // Höhe der Platte
 led_count_x = len(word_grid[0]);
 led_count_y = len(word_grid);
 
+translate([led_count_x * cell_size / -2 - extra_border,
+            led_count_y * cell_size / -2 - extra_border,
+            0])
 difference() {
     // Äußere Platte
     linear_extrude(thickness)
